@@ -1,0 +1,73 @@
+#!/usr/bin/env ruby
+require 'slack-notifier'
+require 'pathname'
+require 'optparse'
+
+message = {
+  ts: Time.now.to_i,
+  mrkdwn_in: ['text'],
+}
+
+from = Pathname(__FILE__).basename.sub_ext('').to_s
+channel = nil
+verbose = false
+dry_run = false
+
+OptionParser.new do |opts|
+  opts.version = 'v1'
+  opts.banner = <<~BANNER << opts.banner << ' [MESSAGE]'
+    Sends a message to a Slack channel.
+
+    BANNER
+  opts.separator <<~SEPARATOR
+
+    If not given as parameter(s), the MESSAGE is read from STDIN. The message text
+    is declared to be formatted with (Slack's flavour of) markdown.
+
+    The SLACK_WEBHOOK_URL environment variable must be set. Get yours at
+    https://my.slack.com/services/new/incoming-webhook/.
+
+    Options:
+  SEPARATOR
+
+  %i(color title title_link image_url).each do |option|
+    opts.on("--#{option} VALUE", "Set '#{option}' property of message") do |value|
+      message[option] = value
+    end
+  end
+
+  opts.on('--from VALUE', "Set 'from' property of message") do |value|
+    from = value
+  end
+
+  opts.on('--channel NAME', 'Send message to the given channel. The # sign is optional.') do |value|
+    channel = value
+  end
+
+  opts.on('--[no-]verbose', 'Enable verbose output') do |value|
+    verbose = value
+  end
+
+  opts.on('--[no-]dry-run', 'Dry-run (do not actually send the message.') do |value|
+    dry_run = value
+  end
+end.parse!
+
+message[:text] = if ARGV.empty?
+                   ARGF.read
+                 else
+                   ARGV.join(' ')
+                 end
+
+if verbose
+  puts "From: #{from}"
+  puts "To: #{channel}"
+  puts
+  puts message.to_json
+end
+
+unless dry_run
+  Slack::Notifier
+    .new(ENV['SLACK_WEBHOOK_URL'], username: from, channel: channel)
+    .post(attachments: [message])
+end
