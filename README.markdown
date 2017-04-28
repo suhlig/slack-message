@@ -1,8 +1,8 @@
 # Send a Slack message
 
-This is an executable script for sending messages to a Slack channel.
+[![Docker Automated build](https://img.shields.io/docker/automated/suhlig/slack-message.svg)](docker.io)
 
-It wraps the [slack-notifier](https://github.com/stevenosloan/slack-notifier) gem. It is also available as Docker image.
+This is an executable script for sending messages to a Slack channel from the command line. It wraps the [slack-notifier](https://github.com/stevenosloan/slack-notifier) gem. It is also available as Docker image.
 
 # Build
 
